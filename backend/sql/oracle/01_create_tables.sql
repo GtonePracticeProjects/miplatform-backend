@@ -1,4 +1,4 @@
--- Oracle 12c+ / 앱 계정(BANK_APP) 스키마에서 실행 (SQL Developer: F5 "스크립트 실행")
+-- Oracle 12c+ / 앱 계정(BANK_MI) 스키마에서 실행 (SQL Developer: F5 "스크립트 실행")
 -- 재실행이 필요하면 먼저 00_drop_all.sql 실행
 
 -- 1. 계좌

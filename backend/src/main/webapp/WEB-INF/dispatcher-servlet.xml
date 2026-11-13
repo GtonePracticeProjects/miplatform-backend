@@ -16,9 +16,6 @@
 
     <mvc:annotation-driven/>
 
-    <!-- jQuery 등 정적 리소스 (webjars: 폐쇄망에서도 war 내부에서 서빙) -->
-    <mvc:resources mapping="/webjars/**" location="classpath:/META-INF/resources/webjars/"/>
-    <mvc:resources mapping="/resources/**" location="/resources/"/>
 
     <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
         <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
