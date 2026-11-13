@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  대출 목록/신청/승인 화면 (MiPlatform 3.x 가정, 수기 작성 - MiPlatform 에서 열어보지 않음)
+  호출 방식:
+    - 목록 조회 : Transaction() 직접 호출
+    - 대출 신청 : 공통 래퍼 gfn_transaction() 경유
+    - 승인/거절 : 메뉴 변수에서 URL 을 읽어 호출 (gfn_getMenuUrl)  <- 어려운 케이스
+-->
+<Window id="LoanMain" title="대출" width="800" height="600">
+  <Form id="form" width="800" height="600">
+    <Datasets>
+      <Dataset id="ds_cond">
+        <ColumnInfo><Column id="status" type="STRING" size="1"/></ColumnInfo>
+      </Dataset>
+      <Dataset id="ds_loan">
+        <ColumnInfo>
+          <Column id="loanNo" type="INT" size="12"/>
+          <Column id="acctNo" type="STRING" size="20"/>
+          <Column id="principal" type="INT" size="12"/>
+          <Column id="rate" type="DECIMAL" size="8"/>
+          <Column id="termMonths" type="INT" size="3"/>
+          <Column id="monthlyPay" type="INT" size="12"/>
+          <Column id="statusCd" type="STRING" size="1"/>
+          <Column id="reqDt" type="STRING" size="14"/>
+        </ColumnInfo>
+      </Dataset>
+      <Dataset id="ds_apply">
+        <ColumnInfo>
+          <Column id="acctNo" type="STRING" size="20"/>
+          <Column id="principal" type="INT" size="12"/>
+          <Column id="termMonths" type="INT" size="3"/>
+        </ColumnInfo>
+      </Dataset>
+      <Dataset id="ds_decide">
+        <ColumnInfo>
+          <Column id="loanNo" type="INT" size="12"/>
+          <Column id="approveYn" type="STRING" size="1"/>
+        </ColumnInfo>
+      </Dataset>
+    </Datasets>
+
+    <Components>
+      <Combo id="cbo_status" left="10" top="10" width="100" height="24"/>
+      <Button id="btn_search" left="120" top="10" width="80" height="24" text="조회" OnClick="btn_search_OnClick"/>
+      <Grid id="grd_loan" left="10" top="40" width="780" height="260" binddataset="ds_loan"/>
+      <Button id="btn_approve" left="10" top="310" width="80" height="24" text="승인" OnClick="btn_approve_OnClick"/>
+      <Button id="btn_reject" left="100" top="310" width="80" height="24" text="거절" OnClick="btn_reject_OnClick"/>
+      <Edit id="edt_acct" left="10" top="360" width="150" height="24"/>
+      <Edit id="edt_principal" left="170" top="360" width="120" height="24"/>
+      <Edit id="edt_term" left="300" top="360" width="60" height="24"/>
+      <Button id="btn_apply" left="370" top="360" width="80" height="24" text="신청" OnClick="btn_apply_OnClick"/>
+    </Components>
+
+    <Script type="javascript"><![CDATA[
+include "common/Common.js";
+
+// ---------- 직접 호출: 대출 목록 ----------
+function btn_search_OnClick(obj)
+{
+    ds_cond.ClearData();
+    ds_cond.AddRow();
+    ds_cond.SetColumn(0, "status", cbo_status.Value);
+
+    Transaction("svcLoanList",
+                "http://localhost:8080/bank/miplatform/loan/list",
+                "ds_cond=ds_cond",
+                "ds_loan=ds_loan",
+                "",
+                "fn_callback");
+}
+
+// ---------- 공통 래퍼 호출: 대출 신청 ----------
+function btn_apply_OnClick(obj)
+{
+    ds_apply.ClearData();
+    ds_apply.AddRow();
+    ds_apply.SetColumn(0, "acctNo", edt_acct.Text);
+    ds_apply.SetColumn(0, "principal", edt_principal.Text);
+    ds_apply.SetColumn(0, "termMonths", edt_term.Text);
+
+    gfn_transaction("svcLoanApply",
+                    "/miplatform/loan/apply",
+                    "ds_apply=ds_apply",
+                    "",
+                    "",
+                    "fn_callback");
+}
+
+// ---------- 메뉴 변수에서 URL 을 읽어 호출: 승인/거절 ----------
+function fn_decide(strApproveYn)
+{
+    ds_decide.ClearData();
+    ds_decide.AddRow();
+    ds_decide.SetColumn(0, "loanNo", ds_loan.GetColumn(ds_loan.row, "loanNo"));
+    ds_decide.SetColumn(0, "approveYn", strApproveYn);
+
+    var sUrl = gv_svcUrl + gfn_getMenuUrl("LOAN_DECIDE");   // Common.js 의 메뉴 변수에서 결정
+    Transaction("svcLoanDecide",
+                sUrl,
+                "ds_decide=ds_decide",
+                "",
+                "",
+                "fn_callback");
+}
+
+function btn_approve_OnClick(obj) { fn_decide("Y"); }
+function btn_reject_OnClick(obj)  { fn_decide("N"); }
+
+function fn_callback(strSvcId, nErrorCode, strErrorMsg)
+{
+    if (gfn_isError(nErrorCode, strErrorMsg)) {
+        return;
+    }
+    if (strSvcId == "svcLoanApply" || strSvcId == "svcLoanDecide") {
+        btn_search_OnClick(btn_search);
+    }
+}
+    ]]></Script>
+  </Form>
+</Window>

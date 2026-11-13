@@ -1,0 +1,9 @@
+screen_file,call_style,service_id,url,input_dataset,output_dataset,backend_controller_method,note
+frontend/account/AccountMain.xml,direct,svcAccountList,/miplatform/account/list,,ds_account,com.bank.miplatform.controller.MiAccountController#list,URL is a string literal (host http://localhost:8080/bank + path)
+frontend/account/AccountMain.xml,concatenated,svcAccountDetail,/miplatform/account/detail,ds_cond,ds_account;ds_hist,com.bank.miplatform.controller.MiAccountController#detail,URL = sBase + "/miplatform/account/" + sSvc (local variables)
+frontend/account/AccountMain.xml,wrapper,svcAccountTransfer,/miplatform/account/transfer,ds_transfer,,com.bank.miplatform.controller.MiAccountController#transfer,via gfn_transaction() in frontend/common/Common.js (adds gv_svcUrl)
+frontend/customer/CustomerSearch.xml,direct,svcCustomerSearch,/miplatform/customer/search,ds_search,ds_customer,com.bank.miplatform.controller.MiCustomerController#search,URL is a string literal
+frontend/customer/CustomerSearch.xml,wrapper,svcCustomerRegister,/miplatform/customer/register,ds_new (server name ds_customer),,com.bank.miplatform.controller.MiCustomerController#register,via gfn_transaction(); server returns variable custNo
+frontend/loan/LoanMain.xml,direct,svcLoanList,/miplatform/loan/list,ds_cond,ds_loan,com.bank.miplatform.controller.MiLoanController#list,URL is a string literal
+frontend/loan/LoanMain.xml,wrapper,svcLoanApply,/miplatform/loan/apply,ds_apply,,com.bank.miplatform.controller.MiLoanController#apply,via gfn_transaction()
+frontend/loan/LoanMain.xml,concatenated,svcLoanDecide,/miplatform/loan/decide,ds_decide,,com.bank.miplatform.controller.MiLoanController#decide,URL = gv_svcUrl + gfn_getMenuUrl("LOAN_DECIDE") (menu variable defined in frontend/common/Common.js)

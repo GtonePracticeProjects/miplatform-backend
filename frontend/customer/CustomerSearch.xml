@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  고객 조회/등록 화면 (MiPlatform 3.x 가정, 수기 작성 - MiPlatform 에서 열어보지 않음)
+  호출 방식:
+    - 고객 검색 : Transaction() 직접 호출
+    - 고객 등록 : 공통 래퍼 gfn_transaction() 경유
+-->
+<Window id="CustomerSearch" title="고객 조회" width="800" height="500">
+  <Form id="form" width="800" height="500">
+    <Datasets>
+      <Dataset id="ds_search">
+        <ColumnInfo><Column id="keyword" type="STRING" size="50"/></ColumnInfo>
+      </Dataset>
+      <Dataset id="ds_customer">
+        <ColumnInfo>
+          <Column id="custNo" type="STRING" size="10"/>
+          <Column id="custNm" type="STRING" size="50"/>
+          <Column id="phone" type="STRING" size="20"/>
+          <Column id="email" type="STRING" size="100"/>
+          <Column id="regDt" type="STRING" size="14"/>
+        </ColumnInfo>
+      </Dataset>
+      <Dataset id="ds_new">
+        <ColumnInfo>
+          <Column id="custNm" type="STRING" size="50"/>
+          <Column id="phone" type="STRING" size="20"/>
+          <Column id="email" type="STRING" size="100"/>
+        </ColumnInfo>
+      </Dataset>
+    </Datasets>
+
+    <Components>
+      <Edit id="edt_keyword" left="10" top="10" width="200" height="24"/>
+      <Button id="btn_search" left="220" top="10" width="80" height="24" text="검색" OnClick="btn_search_OnClick"/>
+      <Grid id="grd_customer" left="10" top="40" width="780" height="300" binddataset="ds_customer"/>
+      <Edit id="edt_nm" left="10" top="360" width="150" height="24"/>
+      <Edit id="edt_phone" left="170" top="360" width="150" height="24"/>
+      <Edit id="edt_email" left="330" top="360" width="200" height="24"/>
+      <Button id="btn_register" left="540" top="360" width="80" height="24" text="등록" OnClick="btn_register_OnClick"/>
+    </Components>
+
+    <Script type="javascript"><![CDATA[
+include "common/Common.js";
+
+// ---------- 직접 호출: 고객 검색 ----------
+function btn_search_OnClick(obj)
+{
+    ds_search.ClearData();
+    ds_search.AddRow();
+    ds_search.SetColumn(0, "keyword", edt_keyword.Text);
+
+    Transaction("svcCustomerSearch",
+                "http://localhost:8080/bank/miplatform/customer/search",
+                "ds_search=ds_search",
+                "ds_customer=ds_customer",
+                "",
+                "fn_callback");
+}
+
+// ---------- 공통 래퍼 호출: 고객 등록 ----------
+function btn_register_OnClick(obj)
+{
+    ds_new.ClearData();
+    ds_new.AddRow();
+    ds_new.SetColumn(0, "custNm", edt_nm.Text);
+    ds_new.SetColumn(0, "phone", edt_phone.Text);
+    ds_new.SetColumn(0, "email", edt_email.Text);
+
+    // 서버의 ds_customer(입력용) <- 클라이언트 ds_new
+    gfn_transaction("svcCustomerRegister",
+                    "/miplatform/customer/register",
+                    "ds_customer=ds_new",
+                    "",
+                    "",
+                    "fn_callback");
+}
+
+function fn_callback(strSvcId, nErrorCode, strErrorMsg)
+{
+    if (gfn_isError(nErrorCode, strErrorMsg)) {
+        return;
+    }
+    if (strSvcId == "svcCustomerRegister") {
+        alert("고객이 등록되었습니다. 고객번호: " + custNo);   // 서버가 내려준 변수 custNo
+        btn_search_OnClick(btn_search);
+    }
+}
+    ]]></Script>
+  </Form>
+</Window>
