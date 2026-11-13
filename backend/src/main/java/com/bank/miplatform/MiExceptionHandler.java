@@ -31,12 +31,13 @@ public class MiExceptionHandler {
     @ExceptionHandler(BizException.class)
     public void handleBiz(BizException e, HttpServletResponse res) throws IOException {
         log.warn("업무 오류 [{}] {}", e.getErrorCode(), e.getMessage());
-        adapter.write(res, MiResponse.fail(e.getErrorCode(), e.getMessage()));
+        // MiPlatform 의 ErrorCode 는 숫자여야 하므로 -1 로 내리고 업무 코드(E###)는 BizCode 변수로 전달
+        adapter.write(res, MiResponse.fail("-1", e.getMessage()).variable("BizCode", e.getErrorCode()));
     }
 
     @ExceptionHandler(Exception.class)
     public void handleEtc(Exception e, HttpServletResponse res) throws IOException {
         log.error("시스템 오류", e);
-        adapter.write(res, MiResponse.fail("E999", "시스템 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."));
+        adapter.write(res, MiResponse.fail("-2", "시스템 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.").variable("BizCode", "E999"));
     }
 }

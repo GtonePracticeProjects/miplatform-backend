@@ -3,7 +3,7 @@ package com.bank.miplatform.adapter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/** 서버가 돌려줄 VariableList + Dataset 묶음. 오류 코드/메시지는 ErrorCode, ErrorMsg 변수로 전달한다. */
+/** 서버가 돌려줄 VariableList + Dataset 묶음. 오류 코드/메시지는 ErrorCode(숫자, 0=정상), ErrorMsg 변수로 전달한다. */
 public class MiResponse {
 
     public static final String VAR_ERROR_CODE = "ErrorCode";
