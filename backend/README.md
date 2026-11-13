@@ -1,6 +1,6 @@
-# bank-core-web
+# bank-core-web (MiPlatform 샘플 백엔드)
 
-은행권 레거시 스타일 웹 프로젝트 샘플 (Spring MVC 5 XML 설정 + MyBatis + JSP/jQuery + Maven).
+은행권 레거시 스타일 웹 프로젝트 샘플 (Spring MVC 5 XML 설정 + MyBatis + Maven. 화면은 MiPlatform(`../frontend`) 이며 JSP/jQuery 화면은 제거됨. 상위 `../README.md` 의 검증 상태 참고).
 
 ## 구조
 ```
@@ -13,7 +13,6 @@ src/main/resources
  (DB 스크립트는 sql/oracle/ 참고 - 앱이 스키마를 만들지 않음)
 src/main/webapp/WEB-INF
  ├─ web.xml / applicationContext.xml / dispatcher-servlet.xml
- └─ views/                                              JSP
 sql/oracle/{00_drop_all,01_create_tables,02_seed_data,SP_TRANSFER}.sql   Oracle DDL / 샘플 데이터 / 프로시저 예시
 ```
 
@@ -27,24 +26,23 @@ sql/oracle/{00_drop_all,01_create_tables,02_seed_data,SP_TRANSFER}.sql   Oracle 
 
 모든 모듈은 `Controller → Service(인터페이스) → ServiceImpl → DAO/Mapper` 구조입니다.
 
-## 프론트 → 백엔드 호출 방식 샘플 (`/sample`)
-| 구분 | 방식 | 위치 |
-|---|---|---|
-| 1~3 | 고정 URL / URL+변수(쿼리스트링·PathVariable) / form 제출 | 기존 account·customer·loan·notice 화면 |
-| 4 | jQuery Ajax: getJSON+PathVariable, get+쿼리, post+serialize, JSON 본문, HTML 조각 `.load()` | `sample/ajax.jsp` |
-| 5 | fetch (순수 JS): GET/POST form/POST JSON/오류 처리 | `sample/fetch.jsp` |
-| 6 | 공통 JS 래퍼(`common.js`) + URL 상수 파일(`urls.js`) | `webapp/resources/js`, `sample/common.jsp` |
-| 7 | 서비스ID 단일 URL 방식 | 별도 레포에서 진행 예정 |
+## MiPlatform 진입점 (`com.bank.miplatform`)
+| 구분 | 내용 |
+|---|---|
+| `adapter/` | `MiPlatformAdapter`(인터페이스), `XmlMiPlatformAdapter`(JDK XML 기본 구현), `MiDataset/MiRequest/MiResponse`(벤더 비의존 모델), `MiDatasets`(VO→Dataset) |
+| `controller/` | `/miplatform/{account,customer,loan,notice}/**` (POST). 기존 Service 를 그대로 호출 |
+| `MiExceptionHandler` | 오류를 HTTP 200 + `ErrorCode`/`ErrorMsg`/`BizCode` 변수로 응답 |
 
-- JSON API 는 `ApiResult {success, code, message, data}` 포맷. Ajax/JSON 요청의 오류는 `GlobalExceptionHandler` 가 JSON 으로, 일반 화면 요청은 에러 JSP 로 응답.
+기존 `GlobalExceptionHandler` 와 `common/error.jsp` 는 남아 있으나 `/miplatform/**` 에는 적용되지 않는다.
+**빌드/기동은 검증하지 못했다** (Maven/Oracle 미설치). 상위 README 참고.
 
 ## Oracle 준비 및 실행
-1. Oracle 12c+ 에 앱 계정(예: `BANK_APP`) 생성 후 해당 계정으로 순서대로 실행
+1. Oracle 12c+ 에 앱 계정(`BANK_MI`) 생성 후 해당 계정으로 순서대로 실행
    - `sql/oracle/01_create_tables.sql` (재실행 시 `00_drop_all.sql` 먼저)
    - `sql/oracle/02_seed_data.sql` (선택. 직접 데이터를 넣을 거면 생략하고 컬럼 규칙만 참고)
 2. `src/main/resources/config/jdbc.properties` 의 `jdbc.url / username / password` 수정
    (서비스명: `jdbc:oracle:thin:@//host:1521/SERVICE`, SID: `jdbc:oracle:thin:@host:1521:SID`)
-3. 실행: `mvn jetty:run` → http://localhost:8080/bank/
+3. 실행: `mvn jetty:run` (컨텍스트 경로 `/bank`) → 예: POST http://localhost:8080/bank/miplatform/account/list
    (기동 시 커넥션 풀이 DB 에 접속하므로 Oracle 에 연결 가능해야 함)
 
 ## 데이터 직접 입력 시 규칙
