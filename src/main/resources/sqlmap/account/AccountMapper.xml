@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- DAO 가 "account.selectAccountList" 처럼 namespace.id 문자열로 호출 (iBATIS 스타일) -->
+<mapper namespace="account">
+
+    <sql id="accountColumns">
+        ACCT_NO, CUST_NM, BALANCE, STATUS_CD, REG_DT
+    </sql>
+
+    <select id="selectAccountList" resultType="AccountVO">
+        SELECT <include refid="accountColumns"/>
+          FROM TB_ACCOUNT
+         ORDER BY ACCT_NO
+    </select>
+
+    <select id="selectAccount" parameterType="string" resultType="AccountVO">
+        SELECT <include refid="accountColumns"/>
+          FROM TB_ACCOUNT
+         WHERE ACCT_NO = #{acctNo}
+    </select>
+
+    <!-- 이체 시 동시성 제어: 행 잠금 -->
+    <select id="selectAccountForUpdate" parameterType="string" resultType="AccountVO">
+        SELECT <include refid="accountColumns"/>
+          FROM TB_ACCOUNT
+         WHERE ACCT_NO = #{acctNo}
+           FOR UPDATE
+    </select>
+
+    <update id="updateBalance" parameterType="map">
+        UPDATE TB_ACCOUNT
+           SET BALANCE = BALANCE + #{delta}
+         WHERE ACCT_NO = #{acctNo}
+    </update>
+
+    <insert id="insertTransHist" parameterType="TransHistVO">
+        INSERT INTO TB_TRANS_HIST
+               (TRANS_SEQ, ACCT_NO, TRANS_TP, AMOUNT, BALANCE_AFTER, COUNTER_ACCT_NO, MEMO, TRANS_DT)
+        VALUES (SEQ_TRANS_HIST.NEXTVAL, #{acctNo}, #{transTp}, #{amount}, #{balanceAfter},
+                #{counterAcctNo,jdbcType=VARCHAR}, #{memo,jdbcType=VARCHAR}, SYSDATE)
+    </insert>
+
+    <select id="selectTransHistList" parameterType="string" resultType="TransHistVO">
+        SELECT TRANS_SEQ, ACCT_NO, TRANS_TP, AMOUNT, BALANCE_AFTER, COUNTER_ACCT_NO, MEMO, TRANS_DT
+          FROM TB_TRANS_HIST
+         WHERE ACCT_NO = #{acctNo}
+         ORDER BY TRANS_SEQ DESC
+    </select>
+</mapper>
